@@ -1,0 +1,64 @@
+<?php
+session_start();
+require ('CONFIG/db.php');
+
+if (!isset($_SESSION['usuario_id'])) {
+    header("Location: login.php");
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $nome = $_POST['nome'];
+    $descricao = $_POST['descricao'];
+    $criador_id = $_SESSION['usuario_id'];
+    $stmt = $conn->prepare("INSERT INTO treinos (nome, descricao, criador_id) VALUES (?, ?, ?)");
+    $stmt->bind_param("ssi", $nome, $descricao, $criador_id);
+
+    if ($stmt->execute()) {
+        echo "<p>Treino adicionado com sucesso!</p>";
+    } else {
+        echo "<p>Erro ao adicionar treino: " . $stmt->error . "</p>";
+    }
+}
+
+$result = $conn->query("SELECT id, nome, descricao FROM treinos");
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Lista de Treinos</title>
+  <link rel="stylesheet" href="CSS/styles.css">
+</head>
+
+<body>
+  <div class="add_treino">
+    <h2>Adicionar Novo Treino</h2>
+    <form action="index.php" method="post">
+      <p>Nome do Treino</p>
+      <input type="text" name="nome" required><br>
+      <p>Descrição</p>
+      <textarea name="descricao" required></textarea><br>
+      <button type="submit" name="adicionar_treino">Adicionar Treino</button>
+    </form>
+  </div>
+  <div class="list_treino">
+    <h2>Lista de Treinos</h2>
+    <ul>
+      <?php while ($row = $result->fetch_assoc()): ?>
+      <li>
+        <strong><?php echo htmlspecialchars($row['nome']); ?></strong>
+        <p><?php echo htmlspecialchars($row['descricao']); ?></p>
+      </li>
+      <?php endwhile; ?>
+    </ul>
+
+    <form action="index.php" method="post">
+      <button type="submit" name="limpar_lista">Limpar Lista de Treinos</button>
+    </form>
+  </div>
+</body>
+
+</html>
